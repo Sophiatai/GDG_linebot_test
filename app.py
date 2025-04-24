@@ -1,4 +1,5 @@
 from places import get_nearby_restaurants
+import google.generativeai as genai
 from stock import txt_to_img_url
 import os
 from dotenv import load_dotenv
@@ -21,6 +22,8 @@ load_dotenv()
 # 從環境變數中讀取 LINE 的 Channel Access Token 和 Channel Secret
 line_token = os.getenv('LINE_TOKEN')
 line_secret = os.getenv('LINE_SECRET')
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # 檢查是否設置了環境變數
 if not line_token or not line_secret:
@@ -92,7 +95,8 @@ def handle_message(event: Event):
                 )
             return
         else:
-            reply_text = ("你說了：" + user_message)
+            response = model.generate_content(user_message) # 傳送使用者的問題給 Gemini
+            reply_text = response.text if response else "抱歉，我無法回答這個問題。"
 
         line_bot_api.reply_message(
             event.reply_token,
